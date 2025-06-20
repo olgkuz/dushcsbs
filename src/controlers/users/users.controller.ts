@@ -2,7 +2,7 @@ import { Controller, Post, Body, Get, Delete, Param, UseGuards } from '@nestjs/c
 import { UsersService } from '../../services/users/users.service';
 import { AuthDto, RegisterDto } from '../../dto/user.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { LocalAuthGuard } from '@app/services/authentication/local-auth.guard/local-auth.guard.service';
+import { LocalAuthGuard } from '../../services/authentication/local-auth.guard/local-auth.guard.service';
 
 @Controller('users')
 export class UsersController {
@@ -31,11 +31,13 @@ export class UsersController {
     return this.usersService.getUserById(id);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete()
   async deleteUsers() {
     return this.usersService.deleteUsers();
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   async deleteUserById(@Param('id') id: string) {
     return this.usersService.deleteUserById(id);

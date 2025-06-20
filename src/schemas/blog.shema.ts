@@ -1,35 +1,44 @@
+
+
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { IBlog } from '../interfaces/blog';
 
 @Schema({ timestamps: true })
-export class User {
+export class Blog implements IBlog {
   @Prop({ type: Types.ObjectId, default: () => new Types.ObjectId() })
   _id!: Types.ObjectId;
 
-  @Prop({ required: true, unique: true })
-  login!: string;
+  @Prop({ required: true })
+  title!: string;
 
   @Prop({ required: true })
-  password!: string;
+  previewText!: string;
 
-  @Prop()
-  email?: string;
+  @Prop({ required: true })
+  content!: string;
+
+  @Prop({ required: true })
+  readingTime!: number;
+
+  @Prop({ type: [String] })
+  tags!: string[];
 
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export type UserDocument = User & Document;
 
-export const UserSchema = SchemaFactory.createForClass(User);
+export type BlogDocument = Blog & Document;
 
-UserSchema.set('toJSON', {
+export const BlogSchema = SchemaFactory.createForClass(Blog);
+
+BlogSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,
   transform: function (doc, ret) {
     ret.id = ret._id.toString();
     delete ret._id;
-    delete ret.password;
     return ret;
   }
 });

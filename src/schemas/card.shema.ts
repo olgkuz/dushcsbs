@@ -1,35 +1,31 @@
+import { ICard } from '@app/interfaces/card';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
-export class User {
+export class Card implements ICard {
   @Prop({ type: Types.ObjectId, default: () => new Types.ObjectId() })
-  _id!: Types.ObjectId;
-
-  @Prop({ required: true, unique: true })
-  login!: string;
+  _id: Types.ObjectId = new Types.ObjectId();
 
   @Prop({ required: true })
-  password!: string;
+  name: string = '';
 
   @Prop()
-  email?: string;
+  description: string = '';
 
-  createdAt?: Date;
-  updatedAt?: Date;
+  @Prop()
+  img?: string;
 }
 
-export type UserDocument = User & Document;
+export type CardDocument = Card & Document;
+export const CardSchema = SchemaFactory.createForClass(Card);
 
-export const UserSchema = SchemaFactory.createForClass(User);
-
-UserSchema.set('toJSON', {
+// Приводим _id к id
+CardSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,
   transform: function (doc, ret) {
     ret.id = ret._id.toString();
     delete ret._id;
-    delete ret.password;
-    return ret;
   }
 });

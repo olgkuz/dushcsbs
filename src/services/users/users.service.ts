@@ -1,11 +1,11 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from '../../schemas/user.shema';
-import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
+import { User, UserDocument } from '../../schemas/user.shema';
 import { AuthDto, RegisterDto } from '../../dto/user.dto';
-import { IUser } from '@app/interfaces/user';
 
 @Injectable()
 export class UsersService {
@@ -15,16 +15,21 @@ export class UsersService {
   ) {}
 
   async registerUser(registerDto: RegisterDto) {
+    const existing = await this.userModel.findOne({ login: registerDto.login });
+    if (existing) {
+      throw new BadRequestException('Такой пользователь уже существует');
+    }
+
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const newUser = new this.userModel({
       login: registerDto.login,
       password: hashedPassword,
       email: registerDto.email
     });
-    
+
     const user = await newUser.save();
     const payload = { login: user.login, sub: user.id };
-    
+
     return {
       token: this.jwtService.sign(payload),
       user: {
@@ -34,7 +39,8 @@ export class UsersService {
       }
     };
   }
-async login(authDto: AuthDto) {
+
+  async login(authDto: AuthDto) {
     const user = await this.userModel.findOne({ login: authDto.login });
     if (!user) {
       throw new BadRequestException('Неверный логин или пароль');
@@ -46,7 +52,7 @@ async login(authDto: AuthDto) {
     }
 
     const payload = { login: user.login, sub: user.id };
-    
+
     return {
       token: this.jwtService.sign(payload),
       user: {
@@ -58,7 +64,6 @@ async login(authDto: AuthDto) {
       }
     };
   }
-
 
   async getAllUsers() {
     const users = await this.userModel.find().select('-password').exec();
@@ -74,7 +79,7 @@ async login(authDto: AuthDto) {
   async getUserById(id: string) {
     const user = await this.userModel.findById(id).select('-password').exec();
     if (!user) return null;
-    
+
     return {
       id: user.id,
       login: user.login,
@@ -92,24 +97,25 @@ async login(authDto: AuthDto) {
   async deleteUserById(id: string) {
     const user = await this.userModel.findByIdAndDelete(id).exec();
     if (!user) return null;
-    
+
     return {
       id: user.id,
       login: user.login,
       email: user.email
     };
   }
-   async checkAuthUser(login: string, password: string): Promise<IUser> {
+
+  async checkAuthUser(login: string, password: string) {
     const user = await this.userModel.findOne({ login });
     if (!user) {
       throw new BadRequestException('Логин указан неверно');
     }
-    
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       throw new BadRequestException('Пароль указан неверно');
     }
-    
+
     return user.toObject();
   }
 }
