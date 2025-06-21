@@ -8,9 +8,8 @@ async function bootstrap() {
   // Настройка CORS
   app.enableCors({
     origin: 'http://localhost:4200', // Разрешенный origin
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Разрешенные методы
-    credentials: true, // Разрешить передачу кук
-    allowedHeaders: 'Content-Type,Authorization' // Разрешенные заголовки
+    
+    
   });
 
   // Глобальная валидация
