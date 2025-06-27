@@ -7,8 +7,7 @@ async function bootstrap() {
   
   // Настройка CORS
   app.enableCors({
-    origin: 'http://localhost:4200', // Разрешенный origin
-    
+    origin: 'http://localhost:4200', 
     
   });
 

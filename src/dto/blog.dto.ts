@@ -1,5 +1,4 @@
 
-
 import { IBlog } from '../interfaces/blog';
 
 export class BlogDto implements IBlog {

@@ -1,4 +1,3 @@
-// src/controllers/blog/blog.controller.ts
 
 import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
 import { BlogService } from '../../services/blog/blog.service';

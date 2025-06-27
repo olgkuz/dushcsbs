@@ -1,4 +1,4 @@
-// src/controlers/users/users.module.ts
+
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
@@ -18,7 +18,7 @@ import { jwtConstant } from '../../static/privte/constants';
     PassportModule,
     JwtModule.register({
       secret: jwtConstant.secret,
-      signOptions: { expiresIn: '12h' } // Рекомендую добавить срок действия токена
+      signOptions: { expiresIn: '24h' } 
     })
   ],
   controllers: [UsersController],
@@ -28,7 +28,7 @@ import { jwtConstant } from '../../static/privte/constants';
     JwtStrategyService
   ],
   exports: [
-    UsersService // Если вдруг захочешь использовать UsersService в других модулях
+    UsersService 
   ]
 })
 export class UsersModule {}
