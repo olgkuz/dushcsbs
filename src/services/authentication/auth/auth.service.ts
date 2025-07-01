@@ -16,11 +16,8 @@ export class AuthService extends PassportStrategy(Strategy) {
   async validate(login: string, password: string): Promise<any> {
     const user = await this.userService.checkAuthUser(login, password);
     if (!user) {
-      throw new HttpException({
-        status: HttpStatus.CONFLICT,
-        errorText: 'Пользователь не найден',
-      }, HttpStatus.CONFLICT);
+      throw new HttpException('Пользователь не найден', HttpStatus.UNAUTHORIZED);
     }
-    return true;
+    return user; 
   }
 }
