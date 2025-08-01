@@ -1,24 +1,31 @@
 
-import { IBlog } from '../interfaces/blog';
+import { IsString, IsNumber, IsArray, MinLength, IsOptional } from 'class-validator';
+import { Expose } from 'class-transformer';
 
-export class BlogDto implements IBlog {
-  title: string;
-  previewText: string;
-  content: string;
-  readingTime: number;
-  tags: string[];
+export class BlogDto {
+  @Expose()
+  @IsString()
+  @MinLength(3)
+  title: string | undefined;
 
-  constructor(
-    title: string,
-    previewText: string,
-    content: string,
-    readingTime: number,
-    tags: string[]
-  ) {
-    this.title = title;
-    this.previewText = previewText;
-    this.content = content;
-    this.readingTime = readingTime;
-    this.tags = tags;
-  }
+  @Expose()
+  @IsString()
+  @MinLength(10)
+  previewText: string | undefined;
+
+  @Expose()
+  @IsString()
+  @MinLength(50)
+  content: string | undefined;
+
+  @Expose()
+  @IsNumber()
+  readingTime: number | undefined;
+
+  @Expose()
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags: string[] | undefined;
 }
+
