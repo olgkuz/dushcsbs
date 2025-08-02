@@ -3,4 +3,5 @@ export interface ICard {
   name: string;
   description: string;
   img?: string;
+  imgUrl?: string;
 }
