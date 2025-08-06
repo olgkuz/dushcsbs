@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './controlers/users/users.module';
 import { CardsModule } from './controlers/cards/cards.module';
 import { BlogModule } from './controlers/blog/blog.module';
+import { MailModule } from './controlers/mail/mail.module';
 
 @Module({
   imports: [
@@ -16,7 +17,9 @@ import { BlogModule } from './controlers/blog/blog.module';
     }),
     UsersModule,
     CardsModule,
-    BlogModule
+    BlogModule,
+    MailModule
+
   ],
   controllers: [AppController],
   providers: [AppService]

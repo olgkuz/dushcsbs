@@ -1,31 +1,31 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-@Schema({ timestamps: true })
-export class Card {
- @Prop({ required: true })
-name!: string;
-
-@Prop({ required: true })
-description!: string;
-
-
-  @Prop()
-  img?: string;
-}
-
 export type CardDocument = Card & Document;
 
-export const CardSchema = SchemaFactory.createForClass(Card);
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true } // 💡 добавлено, если потребуется toObject()
+})
+export class Card {
+  @Prop({ required: true })
+  name!: string;
 
-// Автоматическое добавление id и imgUrl в JSON
-CardSchema.set('toJSON', {
-  virtuals: true,
-  versionKey: false,
-  transform: function (doc, ret) {
-    ret.id = ret._id.toString();
-    ret.imgUrl = ret.img ? `http://localhost:3000/public/${ret.img}` : null; // ✅
-    delete ret._id;
-  }
+  @Prop({ required: true })
+  description!: string;
+
+  @Prop()
+  img?: string; // 💡 сделано опциональным, если файл не загружен
+}
+
+const CardSchema = SchemaFactory.createForClass(Card);
+
+// 💡 Виртуальное поле для удобного доступа к изображению по URL
+CardSchema.virtual('imgUrl').get(function (this: CardDocument) {
+  return this.img ? `http://localhost:3000/public/${this.img}` : '';
 });
+
+export { CardSchema };
+
 

@@ -11,6 +11,7 @@ export class CardsService {
   ) {}
 
   async getCards(): Promise<ICard[]> {
+    // Без .lean() — чтобы работало виртуальное поле imgUrl
     return this.cardModel.find().exec();
   }
 
@@ -20,7 +21,7 @@ export class CardsService {
 
   async uploadCard(data: { name: string; description: string; img?: string }): Promise<ICard> {
     const created = new this.cardModel(data);
-    return created.save();
+    return created.save(); // Вернётся объект с виртуальным полем imgUrl
   }
 
   async deleteCardById(id: string): Promise<ICard | null> {
