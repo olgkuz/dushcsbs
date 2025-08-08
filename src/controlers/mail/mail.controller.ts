@@ -1,13 +1,16 @@
 import { Controller, Post, Body } from '@nestjs/common';
-import { MailService } from './services/';
+import { MailService } from '@app/services/mail/mail.service';
 
 @Controller('contact')
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
   @Post()
-  async handleContact(@Body() body: { name: string; phone: string; message: string }) {
+  async handleContact(
+    @Body() body: { name: string; phone: string; message: string }
+  ) {
     await this.mailService.sendContactMail(body.name, body.phone, body.message);
     return { success: true };
   }
 }
+

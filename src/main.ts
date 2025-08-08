@@ -2,21 +2,29 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { PUBLIC_PATH } from './constans'; // 👈 импорт пути
 import { join } from 'path';
+import { PUBLIC_PATH } from './constans';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Разрешить запросы с клиента
   app.enableCors({
     origin: 'http://localhost:4200',
+    credentials: true,
   });
 
-  // Статическая папка public
+  // Раздача файлов из папки public (например, картинки)
   app.useStaticAssets(PUBLIC_PATH, {
     prefix: '/public/',
   });
 
+  // Раздача загруженных файлов из папки uploads
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
+  });
+
+  // Валидация входящих запросов
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -25,7 +33,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000, '127.0.0.1');
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  await app.listen(3000);
+  console.log(`🚀 Сервер запущен на http://localhost:3000`);
 }
 bootstrap();

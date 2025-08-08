@@ -1,33 +1,34 @@
-import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
-import { MailService } from './mail.service';
-import { join } from 'path';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MailService } from '@app/services/mail/mail.service';
+import { MailController } from './mail.controller';
 
 @Module({
   imports: [
-    MailerModule.forRoot({
-      transport: {
-        host: 'smtp.gmail.com', // пример для Gmail
-        port: 465,
-        secure: true,
-        auth: {
-          user: 'your-email@gmail.com',
-          pass: 'your-password-or-app-password',
+    ConfigModule,
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => ({
+        transport: {
+          host: 'smtp.mail.ru', // ✅ правильный хост для Mail.ru
+          port: 465,
+          secure: true,
+          auth: {
+            user: config.get<string>('SMTP_USER'),
+            pass: config.get<string>('SMTP_PASS'),
+          },
         },
-      },
-      defaults: {
-        from: '"ShowerGlass" <your-email@gmail.com>',
-      },
-      template: {
-        dir: join(__dirname, 'templates'),
-        adapter: null,
-        options: {
-          strict: true,
+        defaults: {
+          from: `"ShowerGlass" <${config.get<string>('SMTP_USER')}>`,
         },
-      },
+      }),
     }),
   ],
+  controllers: [MailController], // ✅ ← ВОТ ЗДЕСЬ ДОЛЖНО БЫТЬ
   providers: [MailService],
   exports: [MailService],
 })
 export class MailModule {}
+
