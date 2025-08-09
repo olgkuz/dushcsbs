@@ -3,7 +3,7 @@ import { IsString, IsEmail, MinLength, IsOptional, IsNotEmpty } from 'class-vali
 export class AuthDto {
   @IsNotEmpty()
   @IsString()
-  login: string = '';
+  name: string = '';       // было login
 
   @IsNotEmpty()
   @IsString()
@@ -14,7 +14,7 @@ export class RegisterDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(3)
-  login: string = '';
+  name: string = '';       // было login
 
   @IsNotEmpty()
   @IsString()
@@ -28,7 +28,7 @@ export class RegisterDto {
 
 export interface UserResponseDto {
   id: string;
-  login: string;
+  name: string;            // было login
   email?: string;
   createdAt?: Date;
   updatedAt?: Date;

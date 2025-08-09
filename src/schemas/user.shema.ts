@@ -7,7 +7,7 @@ export class User {
   _id!: Types.ObjectId;
 
   @Prop({ required: true, unique: true })
-  login!: string;
+  name!: string;       // было login
 
   @Prop({ required: true })
   password!: string;
@@ -20,7 +20,6 @@ export class User {
 }
 
 export type UserDocument = User & Document;
-
 export const UserSchema = SchemaFactory.createForClass(User);
 
 UserSchema.set('toJSON', {

@@ -13,7 +13,7 @@ export class UsersController {
     return this.usersService.registerUser(registerDto);
   }
 
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(LocalAuthGuard) // ✅ см. LocalStrategy ниже
   @Post('login')
   async login(@Body() authDto: AuthDto) {
     return this.usersService.login(authDto);

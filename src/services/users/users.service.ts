@@ -15,49 +15,57 @@ export class UsersService {
   ) {}
 
   async registerUser(registerDto: RegisterDto) {
-    const existing = await this.userModel.findOne({ login: registerDto.login });
+    // совместимость: проверим и по name, и по legacy login
+    const existing = await this.userModel.findOne({
+      $or: [{ name: registerDto.name }, { login: registerDto.name }]
+    });
+
     if (existing) {
       throw new BadRequestException('Такой пользователь уже существует');
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const newUser = new this.userModel({
-      login: registerDto.login,
+      name: registerDto.name,
       password: hashedPassword,
       email: registerDto.email
     });
 
     const user = await newUser.save();
-    const payload = { login: user.login, sub: user.id };
+    const payload = { name: user.name, sub: user.id };
 
     return {
       token: this.jwtService.sign(payload),
       user: {
         id: user.id,
-        login: user.login,
+        name: user.name,
         email: user.email
       }
     };
   }
 
   async login(authDto: AuthDto) {
-    const user = await this.userModel.findOne({ login: authDto.login });
+    // совместимость: ищем и по полю name, и по старому login (если такие документы остались)
+    const user = await this.userModel.findOne({
+      $or: [{ name: authDto.name }, { login: authDto.name }]
+    });
+
     if (!user) {
-      throw new BadRequestException('Неверный логин или пароль');
+      throw new BadRequestException('Неверное имя или пароль');
     }
 
     const isPasswordValid = await bcrypt.compare(authDto.password, user.password);
     if (!isPasswordValid) {
-      throw new BadRequestException('Неверный логин или пароль');
+      throw new BadRequestException('Неверное имя или пароль');
     }
 
-    const payload = { login: user.login, sub: user.id };
+    const payload = { name: user.name ?? (user as any).login, sub: user.id };
 
     return {
       token: this.jwtService.sign(payload),
       user: {
         id: user.id,
-        login: user.login,
+        name: user.name ?? (user as any).login,
         email: user.email,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -69,7 +77,7 @@ export class UsersService {
     const users = await this.userModel.find().select('-password').exec();
     return users.map(user => ({
       id: user.id,
-      login: user.login,
+      name: (user as any).name ?? (user as any).login,
       email: user.email,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
@@ -82,7 +90,7 @@ export class UsersService {
 
     return {
       id: user.id,
-      login: user.login,
+      name: (user as any).name ?? (user as any).login,
       email: user.email,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
@@ -100,15 +108,18 @@ export class UsersService {
 
     return {
       id: user.id,
-      login: user.login,
+      name: (user as any).name ?? (user as any).login,
       email: user.email
     };
   }
 
-  async checkAuthUser(login: string, password: string) {
-    const user = await this.userModel.findOne({ login });
+  // если где-то используется прямой метод
+  async checkAuthUser(name: string, password: string) {
+    const user = await this.userModel.findOne({
+      $or: [{ name }, { login: name }]
+    });
     if (!user) {
-      throw new BadRequestException('Логин указан неверно');
+      throw new BadRequestException('Имя указано неверно');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);

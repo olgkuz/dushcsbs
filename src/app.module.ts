@@ -10,7 +10,7 @@ import { UsersModule } from './controlers/users/users.module';
 import { CardsModule } from './controlers/cards/cards.module';
 import { BlogModule } from './controlers/blog/blog.module';
 import { MailModule } from './controlers/mail/mail.module';
-import { DesignersModule } from './controlers/designers/designers/designers.module';
+import { DesignersModule } from './controlers/designers/designers.module';
 
 @Module({
   imports: [
