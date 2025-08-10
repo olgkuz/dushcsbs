@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, Delete, Param, UseGuards } from '@nestjs/common';
+// src/controlers/users/users.controller.ts
+import { Controller, Post, Body, Get, Delete, Param, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from '../../services/users/users.service';
 import { AuthDto, RegisterDto } from '../../dto/user.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -13,11 +14,16 @@ export class UsersController {
     return this.usersService.registerUser(registerDto);
   }
 
-  @UseGuards(LocalAuthGuard) // ✅ см. LocalStrategy ниже
-  @Post('login')
-  async login(@Body() authDto: AuthDto) {
-    return this.usersService.login(authDto);
-  }
+  @UseGuards(LocalAuthGuard)
+@Post('login')
+async login(@Req() req: any) {
+  const u = req.user; // нормализовано в LocalStrategy
+  return this.usersService.issueTokenFromUserObject({
+    id: u.id,
+    name: u.name,
+    email: u.email
+  });
+}
 
   @UseGuards(AuthGuard('jwt'))
   @Get()

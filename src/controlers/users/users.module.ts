@@ -6,11 +6,11 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { UsersController } from './users.controller';
 import { UsersService } from '../../services/users/users.service';
-import { AuthService } from '../../services/authentication/auth/auth.service';
 import { JwtStrategyService } from '../../services/authentication/jwt-strategy/jwt-strategy.service';
 
 import { User, UserSchema } from '../../schemas/user.shema';
 import { jwtConstant } from '../../static/privte/constants';
+import { LocalStrategy } from '@app/services/authentication/local-strategy/local-strategy.service';
 
 @Module({
   imports: [
@@ -24,8 +24,9 @@ import { jwtConstant } from '../../static/privte/constants';
   controllers: [UsersController],
   providers: [
     UsersService,
-    AuthService,
-    JwtStrategyService
+    
+     LocalStrategy,   
+    JwtStrategyService  
   ],
   exports: [
     UsersService 
