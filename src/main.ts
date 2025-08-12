@@ -10,10 +10,10 @@ async function bootstrap() {
 
   // Разрешить запросы с клиента
   app.enableCors({
-    origin: 'http://localhost:4200',
-    credentials: true,
-  });
-
+  origin: 'http://localhost:4200', // URL твоего Angular-приложения
+  methods: 'GET,POST,PUT,DELETE',
+  allowedHeaders: 'Content-Type, Authorization',
+});
   // Раздача файлов из папки public (например, картинки)
   app.useStaticAssets(PUBLIC_PATH, {
     prefix: '/public/',

@@ -19,40 +19,38 @@ export class DesignersController {
   constructor(private readonly mailService: MailService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads',
-      filename: (req, file, cb) => {
-        const uniqueName = `${Date.now()}-${file.originalname}`;
-        cb(null, uniqueName);
-      }
-    }),
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-    fileFilter: (req, file, cb) => {
-      const allowed = ['.pdf', '.jpg', '.jpeg', '.png'];
-      const ext = extname(file.originalname).toLowerCase();
-      cb(null, allowed.includes(ext));
+@Post('upload')
+@UseInterceptors(FileInterceptor('file', {
+  storage: diskStorage({
+    destination: './uploads',
+    filename: (req, file, cb) => {
+      const uniqueName = `${Date.now()}-${file.originalname}`;
+      cb(null, uniqueName);
     }
-  }))
-  async handleDesignerUpload(
-    @UploadedFile() file: Express.Multer.File,
-    @Body('objectName') objectName: string,
-    @Body('phone') phone: string,
-    @Body('comment') comment: string,
-    @Req() req: any
-  ) {
-    const designerEmail = req.user.email;
+  })
+}))
+async handleDesignerUpload(
+  @UploadedFile() file: Express.Multer.File,
+  @Body('objectName') objectName: string,
+  @Body('phone') phone: string,
+  @Body('comment') comment: string,
+  @Req() req: any
+) {
+  console.log('Получен файл:', file); // ← для отладки
+  console.log('Данные:', { objectName, phone, comment }); // ← для отладки
 
+  try {
     await this.mailService.sendDesignerAssignment({
-      to: designerEmail,
+      to: req.user.email,
       filePath: file.path,
       fileName: file.originalname,
       objectName,
       phone,
       comment
     });
-
     return { success: true };
+  } catch (err) {
+    console.error('Ошибка:', err);
+    throw new Error('Не удалось отправить файл');
   }
-}
+}}
