@@ -1,34 +1,36 @@
+// controlers/mail/mail.module.ts
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailService } from '@app/services/mail/mail.service';
-import { MailController } from './mail.controller';
+import { MailController } from './mail.controller';  // ← добавь импорт контроллера
 
 @Module({
   imports: [
     ConfigModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (config: ConfigService) => ({
+      useFactory: (cfg: ConfigService) => ({
         transport: {
-          host: 'smtp.mail.ru', // ✅ правильный хост для Mail.ru
+          host: 'smtp.mail.ru',
           port: 465,
           secure: true,
           auth: {
-            user: config.get<string>('SMTP_USER'),
-            pass: config.get<string>('SMTP_PASS'),
+            user: cfg.get<string>('MAIL_USER'),
+            pass: cfg.get<string>('MAIL_PASS'),
           },
         },
         defaults: {
-          from: `"ShowerGlass" <${config.get<string>('SMTP_USER')}>`,
+          from: `"ShowerGlass" <${cfg.get<string>('MAIL_USER')}>`,
         },
       }),
+      inject: [ConfigService],
     }),
   ],
-  controllers: [MailController], // ✅ ← ВОТ ЗДЕСЬ ДОЛЖНО БЫТЬ
+  controllers: [MailController],          // ← ЭТО ВАЖНО
   providers: [MailService],
   exports: [MailService],
 })
 export class MailModule {}
+
 
