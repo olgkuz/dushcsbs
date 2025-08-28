@@ -12,6 +12,42 @@ export class MailService {
     private readonly config: ConfigService,
   ) {}
 
+  // === ВЕРНУЛИ метод для контактной формы ===
+  async sendContactMail(name: string, phone: string, message: string): Promise<void> {
+    const toEmail = this.config.get<string>('RECEIVER_EMAIL');
+    const fromEmail = this.config.get<string>('MAIL_USER');
+
+    if (!toEmail) {
+      throw new BadRequestException('Не указана почта получателя (RECEIVER_EMAIL)');
+    }
+    if (!fromEmail) {
+      throw new InternalServerErrorException('MAIL_USER не задан (отправитель)');
+    }
+
+    // Если в поле "phone" случайно пришла почта — положим её в replyTo
+    const looksLikeEmail = typeof phone === 'string' && phone.includes('@');
+
+    try {
+      await this.mailerService.sendMail({
+        from: `"ShowerGlass" <${fromEmail}>`,
+        to: toEmail,
+        replyTo: looksLikeEmail ? phone : undefined,
+        subject: 'Новая заявка с сайта ShowerGlass',
+        text:
+`Имя: ${name || '-'}
+Телефон/Email: ${phone || '-'}
+Сообщение:
+${message || '-'}`,
+      });
+    } catch (e: any) {
+      if (e?.responseCode === 550) {
+        throw new BadRequestException('Почтовый сервер отклонил письмо: проверьте адреса (550).');
+      }
+      throw new InternalServerErrorException(`Не удалось отправить письмо: ${e?.message ?? 'unknown'}`);
+    }
+  }
+
+  // === уже был метод для задания от дизайнера ===
   async sendDesignerAssignment(params: {
     to: string;
     filePath: string;
@@ -57,7 +93,6 @@ ${comment ?? '-'}`,
         ],
       });
 
-      // для ясности: если SMTP вернул rejected — считаем ошибкой
       if ((info as any)?.rejected?.length) {
         throw new BadRequestException(
           `Почтовый сервер отклонил адрес(а): ${(info as any).rejected.join(', ')}`
@@ -70,8 +105,4 @@ ${comment ?? '-'}`,
       throw new InternalServerErrorException(`Не удалось отправить письмо: ${e?.message ?? 'unknown'}`);
     }
   }
-
-  // sendContactMail оставляй как есть — он у тебя уже работает
 }
-
-
