@@ -1,9 +1,15 @@
-import { IsString, IsEmail, MinLength, IsOptional, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  MinLength,
+  IsOptional,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class AuthDto {
   @IsNotEmpty()
   @IsString()
-  name: string = '';       // было login
+  name: string = ''; // было login
 
   @IsNotEmpty()
   @IsString()
@@ -14,7 +20,7 @@ export class RegisterDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(3)
-  name: string = '';       // было login
+  name: string = ''; // было login
 
   @IsNotEmpty()
   @IsString()
@@ -28,7 +34,7 @@ export class RegisterDto {
 
 export interface UserResponseDto {
   id: string;
-  name: string;            // было login
+  name: string; // было login
   email?: string;
   createdAt?: Date;
   updatedAt?: Date;

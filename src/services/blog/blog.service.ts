@@ -1,5 +1,4 @@
-
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Blog, BlogDocument } from '../../schemas/blog.shema';
 import { Model, DeleteResult } from 'mongoose';
@@ -8,9 +7,7 @@ import { BlogDto } from '../../dto/blog.dto';
 
 @Injectable()
 export class BlogService {
-  constructor(
-    @InjectModel(Blog.name) private blogModel: Model<BlogDocument>
-  ) {}
+  constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>) {}
 
   async createBlog(dto: BlogDto): Promise<IBlog> {
     const blog = new this.blogModel(dto);
@@ -27,7 +24,7 @@ export class BlogService {
   }
 
   async deleteBlogs(): Promise<DeleteResult> {
-    return this.blogModel.deleteMany();
+    return this.blogModel.deleteMany().exec();
   }
 
   async deleteBlogById(id: string): Promise<IBlog | null> {

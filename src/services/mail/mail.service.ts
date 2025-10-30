@@ -1,9 +1,37 @@
-// mail.service.ts
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+﻿// mail.service.ts
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import { existsSync } from 'fs';
 import { lookup as mimeLookup } from 'mime-types';
+
+const lookupMimeType: (path: string) => string | false = mimeLookup as (
+  path: string,
+) => string | false;
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const extractMessage = (value: unknown): string =>
+  isRecord(value) && typeof value.message === 'string'
+    ? value.message
+    : 'unknown';
+
+const extractResponseCode = (value: unknown): number | undefined =>
+  isRecord(value) && typeof value.responseCode === 'number'
+    ? value.responseCode
+    : undefined;
+
+const extractRejected = (value: unknown): string[] =>
+  isRecord(value) && Array.isArray(value.rejected)
+    ? value.rejected.filter(
+        (item): item is string => typeof item === 'string' && item.length > 0,
+      )
+    : [];
 
 @Injectable()
 export class MailService {
@@ -12,42 +40,52 @@ export class MailService {
     private readonly config: ConfigService,
   ) {}
 
-  // === ВЕРНУЛИ метод для контактной формы ===
-  async sendContactMail(name: string, phone: string, message: string): Promise<void> {
+  // === Contact form notifications ===
+  async sendContactMail(
+    name: string,
+    phone: string,
+    message: string,
+  ): Promise<void> {
     const toEmail = this.config.get<string>('RECEIVER_EMAIL');
     const fromEmail = this.config.get<string>('MAIL_USER');
 
     if (!toEmail) {
-      throw new BadRequestException('Не указана почта получателя (RECEIVER_EMAIL)');
+      throw new BadRequestException(
+        'Receiver email is not configured (RECEIVER_EMAIL).',
+      );
     }
     if (!fromEmail) {
-      throw new InternalServerErrorException('MAIL_USER не задан (отправитель)');
+      throw new InternalServerErrorException(
+        'MAIL_USER is not configured on the server.',
+      );
     }
 
-    // Если в поле "phone" случайно пришла почта — положим её в replyTo
-    const looksLikeEmail = typeof phone === 'string' && phone.includes('@');
+    const looksLikeEmail = phone.includes('@');
 
     try {
       await this.mailerService.sendMail({
         from: `"ShowerGlass" <${fromEmail}>`,
         to: toEmail,
         replyTo: looksLikeEmail ? phone : undefined,
-        subject: 'Новая заявка с сайта ShowerGlass',
-        text:
-`Имя: ${name || '-'}
-Телефон/Email: ${phone || '-'}
-Сообщение:
+        subject: 'ShowerGlass contact form submission',
+        text: `Name: ${name || '-'}
+Phone/Email: ${phone || '-'}
+Message:
 ${message || '-'}`,
       });
-    } catch (e: any) {
-      if (e?.responseCode === 550) {
-        throw new BadRequestException('Почтовый сервер отклонил письмо: проверьте адреса (550).');
+    } catch (error: unknown) {
+      if (extractResponseCode(error) === 550) {
+        throw new BadRequestException(
+          'SMTP rejected the recipient address (response code 550).',
+        );
       }
-      throw new InternalServerErrorException(`Не удалось отправить письмо: ${e?.message ?? 'unknown'}`);
+      throw new InternalServerErrorException(
+        `Failed to send contact email: ${extractMessage(error)}`,
+      );
     }
   }
 
-  // === уже был метод для задания от дизайнера ===
+  // === Designer assignment notifications ===
   async sendDesignerAssignment(params: {
     to: string;
     filePath: string;
@@ -58,51 +96,71 @@ ${message || '-'}`,
     cc?: string[];
     replyTo?: string;
   }): Promise<void> {
-    const { to, filePath, fileName, objectName, phone, comment, cc, replyTo } = params;
+    const { to, filePath, fileName, objectName, phone, comment, cc, replyTo } =
+      params;
     const fromEmail = this.config.get<string>('MAIL_USER');
 
-    if (!to) throw new BadRequestException('E-mail получателя пуст.');
-    if (!fromEmail) throw new InternalServerErrorException('MAIL_USER не задан (отправитель).');
-    if (!filePath || !existsSync(filePath)) throw new BadRequestException('Файл для отправки не найден.');
-    if (!objectName || !phone) throw new BadRequestException('Заполните название объекта и телефон.');
+    if (!to) {
+      throw new BadRequestException('Recipient email is required.');
+    }
+    if (!fromEmail) {
+      throw new InternalServerErrorException(
+        'MAIL_USER is not configured on the server.',
+      );
+    }
+    if (!filePath || !existsSync(filePath)) {
+      throw new BadRequestException('Attachment file not found on disk.');
+    }
+    if (!objectName || !phone) {
+      throw new BadRequestException(
+        'Object name and phone number must be provided.',
+      );
+    }
 
     const safeName = fileName
       .normalize('NFKD')
-      .replace(/[^\w.\-]+/g, '_')
+      .replace(/[^\w.-]+/g, '_')
       .replace(/_+/g, '_');
 
+    const mimeType = lookupMimeType(filePath);
+    const contentType = typeof mimeType === 'string' ? mimeType : undefined;
+
     try {
-      const info = await this.mailerService.sendMail({
+      const info: unknown = await this.mailerService.sendMail({
         from: `"ShowerGlass" <${fromEmail}>`,
         to,
         cc: cc && cc.length ? cc : undefined,
         replyTo,
-        subject: 'Новое задание от дизайнера',
-        text:
-`Объект: ${objectName}
-Телефон: ${phone}
+        subject: 'New designer assignment',
+        text: `Object: ${objectName}
+Phone: ${phone}
 
-Комментарий:
+Comment:
 ${comment ?? '-'}`,
         attachments: [
           {
             filename: safeName,
             path: filePath,
-            contentType: mimeLookup(filePath) || undefined,
+            contentType,
           },
         ],
       });
 
-      if ((info as any)?.rejected?.length) {
+      const rejected = extractRejected(info);
+      if (rejected.length) {
         throw new BadRequestException(
-          `Почтовый сервер отклонил адрес(а): ${(info as any).rejected.join(', ')}`
+          `SMTP rejected recipients: ${rejected.join(', ')}`,
         );
       }
-    } catch (e: any) {
-      if (e?.responseCode === 550) {
-        throw new BadRequestException('Почтовый сервер отклонил письмо (550). Проверьте from/to и существование ящиков.');
+    } catch (error: unknown) {
+      if (extractResponseCode(error) === 550) {
+        throw new BadRequestException(
+          'SMTP rejected the recipient address (response code 550).',
+        );
       }
-      throw new InternalServerErrorException(`Не удалось отправить письмо: ${e?.message ?? 'unknown'}`);
+      throw new InternalServerErrorException(
+        `Failed to send designer assignment email: ${extractMessage(error)}`,
+      );
     }
   }
 }

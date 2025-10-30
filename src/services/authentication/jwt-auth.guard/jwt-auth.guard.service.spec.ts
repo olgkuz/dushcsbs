@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { JwtAuthGuardService } from './jwt-auth.guard.service';
+import { JwtAuthGuard } from './jwt-auth.guard.service';
 
-describe('JwtAuthGuardService', () => {
-  let service: JwtAuthGuardService;
+describe('JwtAuthGuard', () => {
+  let guard: JwtAuthGuard;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [JwtAuthGuardService],
+      providers: [JwtAuthGuard],
     }).compile();
 
-    service = module.get<JwtAuthGuardService>(JwtAuthGuardService);
+    guard = module.get<JwtAuthGuard>(JwtAuthGuard);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(guard).toBeDefined();
   });
 });

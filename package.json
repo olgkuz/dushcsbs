@@ -34,6 +34,9 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "compression": "^1.8.1",
+    "helmet": "^8.1.0",
+    "mime-types": "^3.0.1",
     "mongoose": "^8.16.0",
     "nodemailer": "^7.0.5",
     "passport": "^0.7.0",
@@ -85,6 +88,12 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^@app/(.*)$": "<rootDir>/$1",
+      "^@modules/(.*)$": "<rootDir>/modules/$1",
+      "^@shared/(.*)$": "<rootDir>/shared/$1",
+      "^src/(.*)$": "<rootDir>/$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

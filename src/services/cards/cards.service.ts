@@ -6,9 +6,7 @@ import { ICard } from '@app/interfaces/card';
 
 @Injectable()
 export class CardsService {
-  constructor(
-    @InjectModel(Card.name) private cardModel: Model<CardDocument>
-  ) {}
+  constructor(@InjectModel(Card.name) private cardModel: Model<CardDocument>) {}
 
   async getCards(): Promise<ICard[]> {
     // Без .lean() — чтобы работало виртуальное поле imgUrl
@@ -19,7 +17,11 @@ export class CardsService {
     return this.cardModel.findById(id).exec();
   }
 
-  async uploadCard(data: { name: string; description: string; img?: string }): Promise<ICard> {
+  async uploadCard(data: {
+    name: string;
+    description: string;
+    img?: string;
+  }): Promise<ICard> {
     const created = new this.cardModel(data);
     return created.save(); // Вернётся объект с виртуальным полем imgUrl
   }
@@ -32,4 +34,3 @@ export class CardsService {
     return this.cardModel.deleteMany().exec();
   }
 }
-

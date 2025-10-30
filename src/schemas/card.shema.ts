@@ -1,12 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { buildPublicAssetUrl } from '@app/utils/public-asset-url';
 
 export type CardDocument = Card & Document;
 
 @Schema({
   timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true } // 💡 добавлено, если потребуется toObject()
+  toObject: { virtuals: true }, // 💡 добавлено, если потребуется toObject()
 })
 export class Card {
   @Prop({ required: true })
@@ -23,9 +24,7 @@ const CardSchema = SchemaFactory.createForClass(Card);
 
 // 💡 Виртуальное поле для удобного доступа к изображению по URL
 CardSchema.virtual('imgUrl').get(function (this: CardDocument) {
-  return this.img ? `http://localhost:3000/public/${this.img}` : '';
+  return buildPublicAssetUrl(this.img);
 });
 
 export { CardSchema };
-
-

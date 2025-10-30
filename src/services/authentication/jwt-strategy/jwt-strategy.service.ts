@@ -4,9 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { jwtConstant } from '../../../static/privte/constants';
 
 type JwtPayload = {
-  sub: string;      // id пользователя
-  name: string;     // имя пользователя
-  email?: string;   // опционально, если положим в payload
+  sub: string; // user id
+  name: string; // user display name
+  email?: string; // optional email embedded in the token
 };
 
 @Injectable()
@@ -19,14 +19,12 @@ export class JwtStrategyService extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload) {
-    // Это попадёт в req.user
+  validate(payload: JwtPayload) {
+    // value that becomes available as req.user
     return {
       id: payload.sub,
       name: payload.name,
-      email: payload.email, // будет undefined, если не положим в payload
+      email: payload.email, // can be undefined if omitted from payload
     };
   }
 }
-
-

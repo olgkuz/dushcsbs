@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
@@ -18,19 +17,11 @@ import { LocalStrategy } from '@app/services/authentication/local-strategy/local
     PassportModule,
     JwtModule.register({
       secret: jwtConstant.secret,
-      signOptions: { expiresIn: '24h' } 
-    })
+      signOptions: { expiresIn: '24h' },
+    }),
   ],
   controllers: [UsersController],
-  providers: [
-    UsersService,
-    
-     LocalStrategy,   
-    JwtStrategyService  
-  ],
-  exports: [
-    UsersService 
-  ]
+  providers: [UsersService, LocalStrategy, JwtStrategyService],
+  exports: [UsersService],
 })
 export class UsersModule {}
-

@@ -1,9 +1,27 @@
 // src/controlers/users/users.controller.ts
-import { Controller, Post, Body, Get, Delete, Param, UseGuards, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { Request } from 'express';
+import { RegisterDto } from '../../dto/user.dto';
 import { UsersService } from '../../services/users/users.service';
-import { AuthDto, RegisterDto } from '../../dto/user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { LocalAuthGuard } from '../../services/authentication/local-auth.guard/local-auth.guard.service';
+
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: string;
+    name: string;
+    email?: string;
+  };
+}
 
 @Controller('users')
 export class UsersController {
@@ -15,15 +33,11 @@ export class UsersController {
   }
 
   @UseGuards(LocalAuthGuard)
-@Post('login')
-async login(@Req() req: any) {
-  const u = req.user; // нормализовано в LocalStrategy
-  return this.usersService.issueTokenFromUserObject({
-    id: u.id,
-    name: u.name,
-    email: u.email
-  });
-}
+  @Post('login')
+  login(@Req() req: AuthenticatedRequest) {
+    const { id, name, email } = req.user; // �?�?�?�?���>����?�?���?�? �? LocalStrategy
+    return this.usersService.issueTokenFromUserObject({ id, name, email });
+  }
 
   @UseGuards(AuthGuard('jwt'))
   @Get()

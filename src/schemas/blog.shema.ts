@@ -1,5 +1,4 @@
-
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+﻿import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { IBlog } from '../interfaces/blog';
 
@@ -27,17 +26,34 @@ export class Blog implements IBlog {
   updatedAt?: Date;
 }
 
-
 export type BlogDocument = Blog & Document;
 
 export const BlogSchema = SchemaFactory.createForClass(Blog);
 
+type MutableBlog = Record<string, unknown> & {
+  _id?: unknown;
+  id?: unknown;
+};
+
 BlogSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,
-  transform: function (doc, ret) {
-    ret.id = ret._id.toString();
-    delete ret._id;
+  transform: (_doc, ret: MutableBlog) => {
+    const rawId = ret._id;
+    if (typeof rawId === 'string') {
+      ret.id = rawId;
+    } else if (
+      rawId &&
+      typeof rawId === 'object' &&
+      'toString' in rawId &&
+      typeof (rawId as { toString: unknown }).toString === 'function'
+    ) {
+      ret.id = (rawId as { toString: () => string }).toString();
+    }
+
+    if ('_id' in ret) {
+      delete ret._id;
+    }
     return ret;
-  }
+  },
 });

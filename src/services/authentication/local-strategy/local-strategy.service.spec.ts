@@ -1,18 +1,55 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { LocalStrategyService } from './local-strategy.service';
+﻿import { Test, TestingModule } from '@nestjs/testing';
+import { LocalStrategy } from './local-strategy.service';
+import {
+  UsersService,
+  AuthenticatedUserPayload,
+} from '../../users/users.service';
 
-describe('LocalStrategyService', () => {
-  let service: LocalStrategyService;
+describe('LocalStrategy', () => {
+  let strategy: LocalStrategy;
+  let usersService: {
+    checkAuthUser: jest.Mock<
+      Promise<AuthenticatedUserPayload>,
+      [string, string]
+    >;
+  };
 
   beforeEach(async () => {
+    const checkAuthUser = jest.fn<
+      Promise<AuthenticatedUserPayload>,
+      [string, string]
+    >();
+    checkAuthUser.mockResolvedValue({
+      id: '123',
+      name: 'Alice',
+      email: 'alice@example.com',
+    });
+
+    usersService = {
+      checkAuthUser,
+    };
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [LocalStrategyService],
+      providers: [
+        LocalStrategy,
+        { provide: UsersService, useValue: usersService },
+      ],
     }).compile();
 
-    service = module.get<LocalStrategyService>(LocalStrategyService);
+    strategy = module.get<LocalStrategy>(LocalStrategy);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(strategy).toBeDefined();
+  });
+
+  it('validates user via UsersService and maps fields', async () => {
+    const result = await strategy.validate('alice', 'secret');
+    expect(usersService.checkAuthUser).toHaveBeenCalledWith('alice', 'secret');
+    expect(result).toEqual({
+      id: '123',
+      name: 'Alice',
+      email: 'alice@example.com',
+    });
   });
 });

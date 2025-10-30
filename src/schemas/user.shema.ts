@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+﻿import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
@@ -7,7 +7,7 @@ export class User {
   _id!: Types.ObjectId;
 
   @Prop({ required: true, unique: true })
-  name!: string;       // было login
+  name!: string; // legacy login
 
   @Prop({ required: true })
   password!: string;
@@ -22,13 +22,36 @@ export class User {
 export type UserDocument = User & Document;
 export const UserSchema = SchemaFactory.createForClass(User);
 
+type MutableUser = Record<string, unknown> & {
+  _id?: unknown;
+  id?: unknown;
+  password?: unknown;
+};
+
 UserSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,
-  transform: function (doc, ret) {
-    ret.id = ret._id.toString();
-    delete ret._id;
-    delete ret.password;
+  transform: (_doc, ret: MutableUser) => {
+    const rawId = ret._id;
+    if (typeof rawId === 'string') {
+      ret.id = rawId;
+    } else if (
+      rawId &&
+      typeof rawId === 'object' &&
+      'toString' in rawId &&
+      typeof (rawId as { toString: unknown }).toString === 'function'
+    ) {
+      ret.id = (rawId as { toString: () => string }).toString();
+    }
+
+    if ('_id' in ret) {
+      delete ret._id;
+    }
+
+    if ('password' in ret) {
+      delete ret.password;
+    }
+
     return ret;
-  }
+  },
 });

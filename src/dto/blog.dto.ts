@@ -1,5 +1,10 @@
-
-import { IsString, IsNumber, IsArray, MinLength, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsArray,
+  MinLength,
+  IsOptional,
+} from 'class-validator';
 import { Expose } from 'class-transformer';
 
 export class BlogDto {
@@ -28,4 +33,3 @@ export class BlogDto {
   @IsOptional()
   tags: string[] | undefined;
 }
-

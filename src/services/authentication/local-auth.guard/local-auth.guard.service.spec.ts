@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LocalAuthGuardService } from './local-auth.guard.service';
+import { LocalAuthGuard } from './local-auth.guard.service';
 
-describe('LocalAuthGuardService', () => {
-  let service: LocalAuthGuardService;
+describe('LocalAuthGuard', () => {
+  let guard: LocalAuthGuard;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [LocalAuthGuardService],
+      providers: [LocalAuthGuard],
     }).compile();
 
-    service = module.get<LocalAuthGuardService>(LocalAuthGuardService);
+    guard = module.get<LocalAuthGuard>(LocalAuthGuard);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(guard).toBeDefined();
   });
 });
