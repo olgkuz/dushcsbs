@@ -1,12 +1,14 @@
 import {
-  Controller,
-  Get,
-  Post,
+  BadRequestException,
   Body,
+  Controller,
   Delete,
+  Get,
   Param,
-  UseInterceptors,
+  Post,
   UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -15,7 +17,12 @@ import { existsSync } from 'fs';
 
 import { CardsService } from '@app/services/cards/cards.service';
 import { ICard } from '@app/interfaces/card';
-import { PUBLIC_PATH } from '@app/constans'; // 👈 правильный путь
+import { PUBLIC_PATH } from '@app/constans';
+import { JwtAuthGuard } from '@app/services/authentication/jwt-auth.guard/jwt-auth.guard.service';
+import {
+  MAX_IMAGE_FILE_SIZE,
+  imageFileFilter,
+} from '@app/utils/image-upload';
 
 @Controller('cards')
 export class CardsController {
@@ -32,36 +39,39 @@ export class CardsController {
   }
 
   @Post('upload')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('img', {
       storage: diskStorage({
-        destination: (req, file, cb) => {
-          console.log('📁 Сохраняем в:', PUBLIC_PATH);
+        destination: (_req, _file, cb) => {
           if (!existsSync(PUBLIC_PATH)) {
-            console.warn('⚠️ Папка public не найдена!');
+            console.warn('Upload directory is missing:', PUBLIC_PATH);
           }
           cb(null, PUBLIC_PATH);
         },
-        filename: (req, file, cb) => {
+        filename: (_req, file, cb) => {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
-          const filename = `card-${uniqueSuffix}${ext}`;
-          console.log('📷 Имя файла:', filename);
-          cb(null, filename);
+          cb(null, `card-${uniqueSuffix}${ext}`);
         },
       }),
+      limits: { fileSize: MAX_IMAGE_FILE_SIZE },
+      fileFilter: imageFileFilter,
     }),
   )
   async uploadCard(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: { name: string; description: string },
   ): Promise<ICard> {
-    const img = file?.filename;
-    return this.cardsService.uploadCard({ ...body, img });
+    if (!file) {
+      throw new BadRequestException('Image file is required');
+    }
+    return this.cardsService.uploadCard({ ...body, img: file.filename });
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async deleteCard(@Param('id') id: string): Promise<ICard | null> {
     return this.cardsService.deleteCardById(id);
   }

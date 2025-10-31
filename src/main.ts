@@ -6,6 +6,7 @@ import compression from 'compression';
 import { json, urlencoded } from 'body-parser';
 import type { RequestHandler } from 'express';
 import helmet from 'helmet';
+import { existsSync, mkdirSync, statSync } from 'fs';
 
 import { AppModule } from './app.module';
 import { PUBLIC_UPLOADS_DIR } from './constans';
@@ -31,9 +32,28 @@ const normaliseBaseUrl = (
   return `http://${resolvedHost}:${resolvedPort}`;
 };
 
+const ensureUploadsDirectory = (dir: string) => {
+  try {
+    if (existsSync(dir)) {
+      const stats = statSync(dir);
+      if (!stats.isDirectory()) {
+        throw new Error(`Path "${dir}" exists but is not a directory.`);
+      }
+      return;
+    }
+    mkdirSync(dir, { recursive: true });
+  } catch (error) {
+    const reason =
+      error instanceof Error ? error.message : JSON.stringify(error);
+    throw new Error(`Failed to prepare uploads directory "${dir}": ${reason}`);
+  }
+};
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
+  const nodeEnv =
+    configService.get<string>('NODE_ENV')?.toLowerCase() ?? 'development';
 
   app.setGlobalPrefix('api', {
     exclude: ['health', 'public/(.*)', 'uploads/(.*)'],
@@ -49,9 +69,17 @@ async function bootstrap() {
   app.use(urlencoded({ extended: true, limit: '5mb' }));
 
   const envOrigins = configService.get<string>('FRONTEND_ORIGIN');
-  const allowedOrigins = parseOrigins(envOrigins);
+  let allowedOrigins = parseOrigins(envOrigins);
   if (!allowedOrigins.length) {
-    allowedOrigins.push(DEFAULT_ORIGIN);
+    if (nodeEnv === 'production') {
+      throw new Error(
+        'FRONTEND_ORIGIN must be configured in production environment.',
+      );
+    }
+    console.warn(
+      'FRONTEND_ORIGIN is not set; falling back to default development origin.',
+    );
+    allowedOrigins = [DEFAULT_ORIGIN];
   }
   app.enableCors({
     origin: allowedOrigins,
@@ -67,6 +95,8 @@ async function bootstrap() {
     exposedHeaders: ['Content-Disposition'],
   });
 
+  ensureUploadsDirectory(PUBLIC_UPLOADS_DIR);
+
   app.useStaticAssets(PUBLIC_UPLOADS_DIR, {
     prefix: '/public/',
   });
@@ -81,7 +111,14 @@ async function bootstrap() {
   );
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  app.set('trust proxy', 1);
+  const trustProxyRaw = configService.get<string>('TRUST_PROXY')?.trim();
+  const shouldTrustProxy =
+    trustProxyRaw == null
+      ? true
+      : ['true', '1', 'yes'].includes(trustProxyRaw.toLowerCase());
+  if (shouldTrustProxy) {
+    app.set('trust proxy', 1);
+  }
   app.enableShutdownHooks();
 
   const port = configService.get<number>('PORT', 3000);

@@ -1,4 +1,3 @@
-// src/modules/others/others.controller.ts
 import {
   BadRequestException,
   Body,
@@ -8,6 +7,7 @@ import {
   Param,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -19,6 +19,11 @@ import { OthersService } from '@app/services/others/others.service';
 import { IOther } from '@app/interfaces/other';
 import { PUBLIC_PATH } from '@app/constans';
 import { OtherDto } from '@app/dto/other.dto';
+import { JwtAuthGuard } from '@app/services/authentication/jwt-auth.guard/jwt-auth.guard.service';
+import {
+  MAX_IMAGE_FILE_SIZE,
+  imageFileFilter,
+} from '@app/utils/image-upload';
 
 @Controller('others')
 export class OthersController {
@@ -35,12 +40,13 @@ export class OthersController {
   }
 
   @Post('upload')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('img', {
       storage: diskStorage({
         destination: (_req, _file, cb) => {
           if (!existsSync(PUBLIC_PATH)) {
-            console.warn('⚠️ PUBLIC_PATH not found:', PUBLIC_PATH);
+            console.warn('Upload directory is missing:', PUBLIC_PATH);
           }
           cb(null, PUBLIC_PATH);
         },
@@ -49,6 +55,8 @@ export class OthersController {
           cb(null, `other-${unique}${extname(file.originalname)}`);
         },
       }),
+      limits: { fileSize: MAX_IMAGE_FILE_SIZE },
+      fileFilter: imageFileFilter,
     }),
   )
   upload(
@@ -62,6 +70,7 @@ export class OthersController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   delete(@Param('id') id: string): Promise<IOther | null> {
     return this.svc.deleteOtherById(id);
   }

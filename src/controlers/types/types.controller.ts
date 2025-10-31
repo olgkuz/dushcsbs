@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -18,6 +19,11 @@ import { TypesService } from '@app/services/types/types.service';
 import { IType } from '@app/interfaces/type';
 import { PUBLIC_PATH } from '@app/constans';
 import { TypeDto } from '@app/dto/type.dto';
+import { JwtAuthGuard } from '@app/services/authentication/jwt-auth.guard/jwt-auth.guard.service';
+import {
+  MAX_IMAGE_FILE_SIZE,
+  imageFileFilter,
+} from '@app/utils/image-upload';
 
 @Controller('types')
 export class TypesController {
@@ -34,12 +40,13 @@ export class TypesController {
   }
 
   @Post('upload')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('img', {
       storage: diskStorage({
         destination: (_req, _file, cb) => {
           if (!existsSync(PUBLIC_PATH)) {
-            console.warn('⚠️ Папка public не найдена:', PUBLIC_PATH);
+            console.warn('Upload directory is missing:', PUBLIC_PATH);
           }
           cb(null, PUBLIC_PATH);
         },
@@ -50,6 +57,8 @@ export class TypesController {
           cb(null, `type-${uniqueSuffix}${ext}`);
         },
       }),
+      limits: { fileSize: MAX_IMAGE_FILE_SIZE },
+      fileFilter: imageFileFilter,
     }),
   )
   async uploadType(
@@ -63,6 +72,7 @@ export class TypesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   async deleteType(@Param('id') id: string): Promise<IType | null> {
     return this.typesService.deleteTypeById(id);
   }

@@ -1,7 +1,7 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { jwtConstant } from '../../../static/privte/constants';
+import { ConfigService } from '@nestjs/config';
 
 type JwtPayload = {
   sub: string; // user id
@@ -11,11 +11,16 @@ type JwtPayload = {
 
 @Injectable()
 export class JwtStrategyService extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(config: ConfigService) {
+    const secret = config.get<string>('JWT_SECRET')?.trim();
+    if (!secret) {
+      throw new Error('JWT_SECRET is not configured.');
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtConstant.secret,
+      secretOrKey: secret,
     });
   }
 

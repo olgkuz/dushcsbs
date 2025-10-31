@@ -29,7 +29,7 @@ export class RegisterDto {
 
   @IsOptional()
   @IsEmail()
-  email?: string = '';
+  email?: string;
 }
 
 export interface UserResponseDto {
