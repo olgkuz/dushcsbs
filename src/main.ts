@@ -59,7 +59,11 @@ async function bootstrap() {
     exclude: ['health', 'public/(.*)', 'uploads/(.*)'],
   });
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
   const compressionMiddleware = (
     compression as unknown as () => RequestHandler
   )();
