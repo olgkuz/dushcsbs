@@ -56,7 +56,7 @@ async function bootstrap() {
     configService.get<string>('NODE_ENV')?.toLowerCase() ?? 'development';
 
   app.setGlobalPrefix('api', {
-    exclude: ['health', 'public/(.*)', 'uploads/(.*)'],
+    exclude: ['health', 'public/:path(*)', 'uploads/:path(*)'],
   });
 
   app.use(
