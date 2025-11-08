@@ -12,6 +12,7 @@ import { AppModule } from './app.module';
 import { PUBLIC_UPLOADS_DIR } from './constans';
 
 const DEFAULT_ORIGIN = 'http://localhost:4200';
+const REQUIRED_ORIGINS = ['https://showerglass.netlify.app', DEFAULT_ORIGIN];
 
 const parseOrigins = (src?: string | null): string[] =>
   (src ?? '')
@@ -84,6 +85,11 @@ async function bootstrap() {
       'FRONTEND_ORIGIN is not set; falling back to default development origin.',
     );
     allowedOrigins = [DEFAULT_ORIGIN];
+  }
+  for (const origin of REQUIRED_ORIGINS) {
+    if (!allowedOrigins.includes(origin)) {
+      allowedOrigins.push(origin);
+    }
   }
   app.enableCors({
     origin: allowedOrigins,
