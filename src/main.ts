@@ -108,7 +108,7 @@ async function bootstrap() {
   ensureUploadsDirectory(PUBLIC_UPLOADS_DIR);
 
   app.useStaticAssets(PUBLIC_UPLOADS_DIR, {
-    prefix: '/public/',
+    prefix: '/uploads/',
   });
 
   app.useGlobalPipes(
