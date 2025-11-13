@@ -75,6 +75,9 @@ async function bootstrap() {
 
   const envOrigins = configService.get<string>('FRONTEND_ORIGIN');
   let allowedOrigins = parseOrigins(envOrigins);
+  console.log('NODE_ENV =', nodeEnv);
+  console.log('FRONTEND_ORIGIN =', envOrigins);
+  console.log('allowedOrigins (after parse) =', allowedOrigins);
   if (!allowedOrigins.length) {
     if (nodeEnv === 'production') {
       throw new Error(
@@ -87,9 +90,11 @@ async function bootstrap() {
     allowedOrigins = [DEFAULT_ORIGIN];
   }
   for (const origin of REQUIRED_ORIGINS) {
+    
     if (!allowedOrigins.includes(origin)) {
       allowedOrigins.push(origin);
     }
+      console.log('Final allowedOrigins =', allowedOrigins);
   }
   app.enableCors({
     origin: allowedOrigins,
