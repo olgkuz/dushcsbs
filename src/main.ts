@@ -12,8 +12,7 @@ import { AppModule } from './app.module';
 import { PUBLIC_UPLOADS_DIR } from './constans';
 
 const DEFAULT_ORIGIN = 'http://localhost:4200';
-const REQUIRED_PROD_ORIGINS = ['https://showerglass.netlify.app'];
-const DEFAULT_DEV_ORIGINS = [DEFAULT_ORIGIN];
+const REQUIRED_ORIGINS = ['https://showerglass.netlify.app', DEFAULT_ORIGIN];
 
 const parseOrigins = (src?: string | null): string[] =>
   (src ?? '')
@@ -76,33 +75,27 @@ async function bootstrap() {
 
   const envOrigins = configService.get<string>('FRONTEND_ORIGIN');
   let allowedOrigins = parseOrigins(envOrigins);
-  const isProduction = nodeEnv === 'production';
-
   console.log('NODE_ENV =', nodeEnv);
   console.log('FRONTEND_ORIGIN =', envOrigins);
   console.log('allowedOrigins (after parse) =', allowedOrigins);
-
-  if (!allowedOrigins.length && isProduction) {
-    throw new Error(
-      'FRONTEND_ORIGIN must be configured in production environment.',
-    );
-  }
-
   if (!allowedOrigins.length) {
+    if (nodeEnv === 'production') {
+      throw new Error(
+        'FRONTEND_ORIGIN must be configured in production environment.',
+      );
+    }
     console.warn(
       'FRONTEND_ORIGIN is not set; falling back to default development origin.',
     );
-    allowedOrigins = [...DEFAULT_DEV_ORIGINS];
+    allowedOrigins = [DEFAULT_ORIGIN];
   }
-
-  const enforcedOrigins = isProduction
-    ? REQUIRED_PROD_ORIGINS
-    : [...DEFAULT_DEV_ORIGINS, ...REQUIRED_PROD_ORIGINS];
-
-  allowedOrigins = Array.from(
-    new Set([...allowedOrigins, ...enforcedOrigins]),
-  );
-  console.log('Final allowedOrigins =', allowedOrigins);
+  for (const origin of REQUIRED_ORIGINS) {
+    
+    if (!allowedOrigins.includes(origin)) {
+      allowedOrigins.push(origin);
+    }
+      console.log('Final allowedOrigins =', allowedOrigins);
+  }
   app.enableCors({
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
