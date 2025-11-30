@@ -41,6 +41,18 @@ describe('MailService', () => {
       expect.objectContaining({
         to: 'to@example.com',
         from: '"ShowerGlass" <from@example.com>',
+        replyTo: undefined,
+        text: expect.stringContaining('Phone/Email: 123'),
+      }),
+    );
+  });
+
+  it('handles missing phone without throwing', async () => {
+    await expect(service.sendContactMail('Bob', undefined, 'Hi there')).resolves.toBeUndefined();
+    expect(mailer.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        replyTo: undefined,
+        text: expect.stringContaining('Phone/Email: -'),
       }),
     );
   });

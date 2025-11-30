@@ -42,10 +42,14 @@ export class MailService {
 
   // === Contact form notifications ===
   async sendContactMail(
-    name: string,
-    phone: string,
-    message: string,
+    name?: string | null,
+    phone?: string | null,
+    message?: string | null,
   ): Promise<void> {
+    const safeName = typeof name === 'string' ? name.trim() : '';
+    const safePhone = typeof phone === 'string' ? phone.trim() : '';
+    const safeMessage = typeof message === 'string' ? message.trim() : '';
+
     const toEmail = this.config.get<string>('RECEIVER_EMAIL');
     const fromEmail = this.config.get<string>('MAIL_USER');
 
@@ -60,18 +64,18 @@ export class MailService {
       );
     }
 
-    const looksLikeEmail = phone.includes('@');
+    const looksLikeEmail = safePhone.includes('@');
 
     try {
       await this.mailerService.sendMail({
         from: `"ShowerGlass" <${fromEmail}>`,
         to: toEmail,
-        replyTo: looksLikeEmail ? phone : undefined,
+        replyTo: looksLikeEmail ? safePhone : undefined,
         subject: 'ShowerGlass contact form submission',
-        text: `Name: ${name || '-'}
-Phone/Email: ${phone || '-'}
+        text: `Name: ${safeName || '-'}
+Phone/Email: ${safePhone || '-'}
 Message:
-${message || '-'}`,
+${safeMessage || '-'}`,
       });
     } catch (error: unknown) {
       if (extractResponseCode(error) === 550) {
