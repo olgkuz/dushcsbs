@@ -68,7 +68,7 @@ describe('BlogService', () => {
       previewText: 'Sample preview text',
       content: 'Content '.repeat(10),
       readingTime: 5,
-      tags: ['tag'],
     });
+    expect('tags' in result).toBe(false);
   });
 });
