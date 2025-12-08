@@ -35,7 +35,7 @@ export class OthersController {
   }
 
   @Get(':id')
-  getOne(@Param('id') id: string): Promise<IOther | null> {
+  getOne(@Param('id') id: string): Promise<IOther> {
     return this.svc.getOtherById(id);
   }
 

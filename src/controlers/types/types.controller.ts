@@ -35,7 +35,7 @@ export class TypesController {
   }
 
   @Get(':id')
-  async getTypeById(@Param('id') id: string): Promise<IType | null> {
+  async getTypeById(@Param('id') id: string): Promise<IType> {
     return this.typesService.getTypeById(id);
   }
 

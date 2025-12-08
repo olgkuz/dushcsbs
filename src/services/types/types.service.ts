@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { DeleteResult, Model } from 'mongoose';
+import { DeleteResult, Model, isValidObjectId } from 'mongoose';
 import { TypeEntity, TypeDocument } from '@app/schemas/type.schema';
 import { IType } from '@app/interfaces/type';
 import { TypeDto } from '@app/dto/type.dto';
@@ -16,8 +16,17 @@ export class TypesService {
     return this.typeModel.find().exec();
   }
 
-  async getTypeById(id: string): Promise<IType | null> {
-    return this.typeModel.findById(id).exec();
+  async getTypeById(id: string): Promise<IType> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid type id format');
+    }
+
+    const type = await this.typeModel.findById(id).exec();
+    if (!type) {
+      throw new NotFoundException('Type not found');
+    }
+
+    return type;
   }
 
   async uploadType(data: TypeDto): Promise<IType> {
@@ -26,6 +35,9 @@ export class TypesService {
   }
 
   async deleteTypeById(id: string): Promise<IType | null> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid type id format');
+    }
     return this.typeModel.findByIdAndDelete(id).exec();
   }
 

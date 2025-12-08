@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { DeleteResult, Model } from 'mongoose';
+import { DeleteResult, Model, isValidObjectId } from 'mongoose';
 import { IOther } from '@app/interfaces/other';
 import { OtherEntity, OtherDocument } from '@app/schemas/other.schema';
 import { OtherDto } from '@app/dto/other.dto';
@@ -15,8 +15,17 @@ export class OthersService {
     return this.model.find().exec();
   }
 
-  getOtherById(id: string): Promise<IOther | null> {
-    return this.model.findById(id).exec();
+  async getOtherById(id: string): Promise<IOther> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid other id format');
+    }
+
+    const other = await this.model.findById(id).exec();
+    if (!other) {
+      throw new NotFoundException('Other not found');
+    }
+
+    return other;
   }
 
   uploadOther(data: OtherDto): Promise<IOther> {
@@ -25,6 +34,9 @@ export class OthersService {
   }
 
   deleteOtherById(id: string): Promise<IOther | null> {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Invalid other id format');
+    }
     return this.model.findByIdAndDelete(id).exec();
   }
 
